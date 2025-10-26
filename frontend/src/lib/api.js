@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://realestatemanagementserver.vercel.app';
 
 // Create axios instance
 const api = axios.create({
@@ -214,7 +214,7 @@ export const handleApiError = (error) => {
 export const uploadFile = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
-  
+
   try {
     const response = await api.post('/upload', formData, {
       headers: {
