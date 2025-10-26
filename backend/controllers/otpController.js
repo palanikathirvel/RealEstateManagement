@@ -5,7 +5,7 @@ const Land = require('../models/Land');
 const House = require('../models/House');
 const Rental = require('../models/Rental');
 const Activity = require('../models/Activity');
-const { sendWhatsAppOTP, validatePhoneNumber } = require('../config/whatsapp');
+
 
 // Helper: Find document across models by id (same as in propertyController)
 const findByIdAcrossModels = async (id) => {
@@ -218,7 +218,7 @@ const verifyOTP = async (req, res) => {
     if (otpRecord.attempts >= 3) {
       otpRecord.isExpired = true;
       await otpRecord.save();
-      
+
       return res.status(400).json({
         success: false,
         message: 'Maximum OTP attempts exceeded. Please request a new OTP.'
@@ -228,9 +228,9 @@ const verifyOTP = async (req, res) => {
     // Verify OTP
     if (!otpRecord.isValidOTP(otp)) {
       await otpRecord.incrementAttempts();
-      
+
       const remainingAttempts = 3 - otpRecord.attempts;
-      
+
       // Log failed verification
       await Activity.logActivity({
         action: 'otp_verify',
@@ -249,7 +249,7 @@ const verifyOTP = async (req, res) => {
 
       return res.status(400).json({
         success: false,
-        message: remainingAttempts > 0 
+        message: remainingAttempts > 0
           ? `Invalid OTP. ${remainingAttempts} attempts remaining.`
           : 'Invalid OTP. Maximum attempts exceeded.',
         attemptsRemaining: remainingAttempts
@@ -329,7 +329,7 @@ const getOTPStatus = async (req, res) => {
     const userId = req.user._id;
 
     const otpRecord = await OTP.findById(otpId);
-    
+
     if (!otpRecord) {
       return res.status(404).json({
         success: false,
@@ -418,7 +418,7 @@ const resendOTP = async (req, res) => {
       ...req.body,
       userId
     };
-    
+
     req.body = newRequest;
     return sendOTP(req, res);
 

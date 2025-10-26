@@ -10,8 +10,7 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Real WhatsApp OTP endpoints using Twilio (no auth required)
-const { sendWhatsAppOTP, validatePhoneNumber } = require('../config/whatsapp');
+// Email OTP endpoints for Contact Owner (no auth required)
 const Property = require('../models/Property');
 const Land = require('../models/Land');
 const House = require('../models/House');
@@ -42,181 +41,9 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Real WhatsApp OTP send endpoint (no auth required)
-router.post('/send-whatsapp', async (req, res) => {
-  try {
-    const { whatsappNumber, propertyId } = req.body;
 
-    if (!whatsappNumber || !propertyId) {
-      return res.status(400).json({
-        success: false,
-        message: 'WhatsApp number and property ID are required'
-      });
-    }
 
-    // Validate phone number (should be 10 digits)
-    if (!/^\d{10}$/.test(whatsappNumber)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid WhatsApp number format. Please enter 10 digits.'
-      });
-    }
 
-    // Check if property exists
-    const property = await findByIdAcrossModels(propertyId);
-    if (!property) {
-      return res.status(404).json({
-        success: false,
-        message: 'Property not found'
-      });
-    }
-
-    // Generate OTP
-    const otp = generateOTP();
-    
-    // Store OTP with 5-minute expiry
-    const otpData = {
-      otp,
-      whatsappNumber,
-      propertyId,
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
-      verified: false,
-      attempts: 0
-    };
-    
-    const otpKey = `${whatsappNumber}_${propertyId}`;
-    otpStorage.set(otpKey, otpData);
-
-    console.log(`📱 WhatsApp OTP: ${otp} for +91${whatsappNumber}`);
-    
-    // Send OTP via WhatsApp using Twilio
-    const fullPhoneNumber = `+91${whatsappNumber}`;
-    const whatsappResult = await sendWhatsAppOTP(fullPhoneNumber, otp);
-    
-    if (!whatsappResult.success && !whatsappResult.mock) {
-      // Remove from storage if sending failed
-      otpStorage.delete(otpKey);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send OTP via WhatsApp. Please try again.',
-        error: whatsappResult.error
-      });
-    }
-    
-    res.json({
-      success: true,
-      message: `OTP sent to WhatsApp number +91${whatsappNumber}`,
-      messageSid: whatsappResult.messageSid,
-      // In development, return OTP for testing
-      ...(process.env.NODE_ENV === 'development' && { otp })
-    });
-
-  } catch (error) {
-    console.error('Send WhatsApp OTP error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to send OTP'
-    });
-  }
-});
-
-// Real WhatsApp OTP verify endpoint (no auth required)
-router.post('/verify-whatsapp', async (req, res) => {
-  try {
-    const { whatsappNumber, otp, propertyId } = req.body;
-
-    if (!whatsappNumber || !otp || !propertyId) {
-      return res.status(400).json({
-        success: false,
-        message: 'WhatsApp number, OTP, and property ID are required'
-      });
-    }
-
-    // Get stored OTP data
-    const otpKey = `${whatsappNumber}_${propertyId}`;
-    const storedOtpData = otpStorage.get(otpKey);
-
-    if (!storedOtpData) {
-      return res.status(400).json({
-        success: false,
-        message: 'No OTP found for this number. Please request a new OTP.'
-      });
-    }
-
-    // Check if OTP expired
-    if (new Date() > storedOtpData.expiresAt) {
-      otpStorage.delete(otpKey);
-      return res.status(400).json({
-        success: false,
-        message: 'OTP has expired. Please request a new OTP.'
-      });
-    }
-
-    // Check attempts limit
-    if (storedOtpData.attempts >= 3) {
-      otpStorage.delete(otpKey);
-      return res.status(400).json({
-        success: false,
-        message: 'Maximum attempts exceeded. Please request a new OTP.'
-      });
-    }
-
-    // Verify OTP
-    if (storedOtpData.otp !== otp) {
-      storedOtpData.attempts++;
-      const remainingAttempts = 3 - storedOtpData.attempts;
-      
-      if (remainingAttempts <= 0) {
-        otpStorage.delete(otpKey);
-      }
-      
-      return res.status(400).json({
-        success: false,
-        message: remainingAttempts > 0 
-          ? `Invalid OTP. ${remainingAttempts} attempts remaining.`
-          : 'Invalid OTP. Maximum attempts exceeded.'
-      });
-    }
-
-    // Get property with owner details
-    const property = await findByIdAcrossModels(propertyId);
-
-    if (!property) {
-      return res.status(404).json({
-        success: false,
-        message: 'Property not found'
-      });
-    }
-
-    // Prepare owner details
-    const ownerDetails = {
-      name: property.ownerDetails?.name || property.uploadedBy?.name || 'Property Owner',
-      phone: property.ownerDetails?.phone || property.uploadedBy?.phone || 'Not available',
-      email: property.ownerDetails?.email || property.uploadedBy?.email || null,
-      propertyId: propertyId,
-      verifiedAt: new Date()
-    };
-
-    // Clean up OTP data after successful verification
-    otpStorage.delete(otpKey);
-
-    console.log(`✅ WhatsApp OTP verified for +91${whatsappNumber}, Property: ${propertyId}`);
-
-    res.json({
-      success: true,
-      message: 'OTP verified successfully',
-      ownerDetails: ownerDetails
-    });
-
-  } catch (error) {
-    console.error('Verify WhatsApp OTP error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to verify OTP'
-    });
-  }
-});
 
 // Email OTP send endpoint for Contact Owner (no auth required)
 router.post('/send-email-contact', async (req, res) => {
@@ -250,7 +77,7 @@ router.post('/send-email-contact', async (req, res) => {
 
     // Generate OTP
     const otp = generateOTP();
-    
+
     // Store OTP with 5-minute expiry
     const otpData = {
       otp,
@@ -261,16 +88,16 @@ router.post('/send-email-contact', async (req, res) => {
       verified: false,
       attempts: 0
     };
-    
+
     const otpKey = `contact_${email}_${propertyId}`;
     otpStorage.set(otpKey, otpData);
 
     console.log(`📧 Contact Owner Email OTP: ${otp} for ${email}`);
-    
+
     // Send OTP via Email
     try {
       const emailResult = await emailService.sendOTPEmail(email, 'User', otp);
-      
+
       if (!emailResult.success) {
         // Remove from storage if sending failed
         otpStorage.delete(otpKey);
@@ -280,7 +107,7 @@ router.post('/send-email-contact', async (req, res) => {
           error: emailResult.error
         });
       }
-      
+
       res.json({
         success: true,
         message: `OTP sent to email address ${email}`,
@@ -351,14 +178,14 @@ router.post('/verify-email-contact', async (req, res) => {
     if (storedOtpData.otp !== otp) {
       storedOtpData.attempts++;
       const remainingAttempts = 3 - storedOtpData.attempts;
-      
+
       if (remainingAttempts <= 0) {
         otpStorage.delete(otpKey);
       }
-      
+
       return res.status(400).json({
         success: false,
-        message: remainingAttempts > 0 
+        message: remainingAttempts > 0
           ? `Invalid OTP. ${remainingAttempts} attempts remaining.`
           : 'Invalid OTP. Maximum attempts exceeded.'
       });
@@ -453,7 +280,7 @@ const sendOTPValidation = [
   body('propertyId')
     .isMongoId()
     .withMessage('Invalid property ID'),
-  
+
   body('phone')
     .matches(/^\+91[6-9]\d{9}$/)
     .withMessage('Please provide a valid Indian phone number (+91XXXXXXXXXX)')
@@ -463,7 +290,7 @@ const verifyOTPValidation = [
   body('otpId')
     .isMongoId()
     .withMessage('Invalid OTP ID'),
-  
+
   body('otp')
     .isLength({ min: 6, max: 6 })
     .isNumeric()
@@ -474,7 +301,7 @@ const resendOTPValidation = [
   body('propertyId')
     .isMongoId()
     .withMessage('Invalid property ID'),
-  
+
   body('phone')
     .matches(/^\+91[6-9]\d{9}$/)
     .withMessage('Please provide a valid Indian phone number (+91XXXXXXXXXX)')

@@ -10,7 +10,7 @@ class ApiClient {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const token = localStorage.getItem('token');
-    
+
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -23,22 +23,22 @@ class ApiClient {
     try {
       const response = await fetch(url, config);
       const data = await response.json();
-      
+
       if (!response.ok) {
         // Create more detailed error message for validation failures
         let errorMessage = data.message || 'API request failed';
-        
+
         if (data.errors && Array.isArray(data.errors)) {
           const validationErrors = data.errors.map(err => `${err.path || err.param}: ${err.msg}`).join(', ');
           errorMessage = `Validation failed: ${validationErrors}`;
         }
-        
+
         const error = new Error(errorMessage);
         error.status = response.status;
         error.errors = data.errors;
         throw error;
       }
-      
+
       return data;
     } catch (error) {
       console.error('API request error:', error);
@@ -161,18 +161,12 @@ export const adminApi = {
   updateVerificationSettings: (settings) => apiClient.put('/admin/settings/verification', settings),
 };
 
-// OTP API for WhatsApp verification (no authentication required)
+// OTP API for Contact Owner (no authentication required)
 export const otpApi = {
-  sendWhatsAppOTP: (whatsappNumber, propertyId) => 
-    apiClient.post('/otp/send-whatsapp', { whatsappNumber, propertyId }),
-  
-  verifyWhatsAppOTP: (whatsappNumber, otp, propertyId) =>
-    apiClient.post('/otp/verify-whatsapp', { whatsappNumber, otp, propertyId }),
-
   // Email OTP for Contact Owner (new functionality)
-  sendEmailOTPContact: (email, propertyId) => 
+  sendEmailOTPContact: (email, propertyId) =>
     apiClient.post('/otp/send-email-contact', { email, propertyId }),
-  
+
   verifyEmailOTPContact: (email, otp, propertyId, userId = null) =>
     apiClient.post('/otp/verify-email-contact', { email, otp, propertyId, userId }),
 };
@@ -184,29 +178,29 @@ export const notificationApi = {
     const queryString = new URLSearchParams(params).toString();
     return apiClient.get(`/notifications/my-notifications${queryString ? `?${queryString}` : ''}`);
   },
-  
+
   // Get all notifications (admin only)
   getAllNotifications: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return apiClient.get(`/notifications/all${queryString ? `?${queryString}` : ''}`);
   },
-  
+
   // Mark notification as read
   markAsRead: (id) =>
     apiClient.put(`/notifications/${id}/read`),
-  
+
   // Mark all notifications as read
   markAllAsRead: () =>
     apiClient.put('/notifications/mark-all-read'),
-  
+
   // Archive notification
   archiveNotification: (id) =>
     apiClient.put(`/notifications/${id}/archive`),
-  
+
   // Delete notification
   deleteNotification: (id) =>
     apiClient.delete(`/notifications/${id}`),
-  
+
   // Get unread count
   getUnreadCount: () =>
     apiClient.get('/notifications/unread-count'),

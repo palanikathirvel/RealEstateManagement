@@ -6,8 +6,8 @@ const { handleUpload } = require('../controllers/uploadController');
 
 const router = express.Router();
 
-// Ensure upload directory exists
-const uploadDir = process.env.UPLOAD_PATH || path.join(__dirname, '..', 'uploads');
+// Ensure upload directory exists (use /tmp for Vercel compatibility)
+const uploadDir = process.env.UPLOAD_PATH || path.join('/tmp', 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 // Multer storage

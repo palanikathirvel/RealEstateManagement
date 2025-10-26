@@ -17,6 +17,10 @@ if (accountSid && authToken) {
 } else {
   console.warn('Twilio credentials not found. WhatsApp OTP functionality will be disabled.');
   console.warn('Please set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in your .env file');
+  // For Vercel deployment, suppress the error to prevent deployment failure
+  if (process.env.VERCEL) {
+    console.log('Running on Vercel - Twilio functionality disabled but not blocking deployment');
+  }
 }
 
 const sendWhatsAppOTP = async (to, otp) => {
@@ -43,7 +47,7 @@ Do not share this OTP with anyone.`,
 
     console.log(`WhatsApp OTP sent successfully: ${message.sid}`);
     return { success: true, messageSid: message.sid };
-    
+
   } catch (error) {
     console.error('WhatsApp OTP sending error:', error);
     return { success: false, error: error.message };
