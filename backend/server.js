@@ -31,9 +31,12 @@ app.use(cors({
     'http://localhost:5175',
     'http://localhost:3000',
     'https://real-estate-management-sand.vercel.app',
+    'https://realestatemanagementserver.vercel.app',
     process.env.FRONTEND_URL
   ].filter(Boolean), // Remove any undefined values
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Rate limiting
