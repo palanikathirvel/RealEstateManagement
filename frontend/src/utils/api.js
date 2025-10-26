@@ -4,11 +4,12 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://realestatemanageme
 // Create axios-like API client
 class ApiClient {
   constructor(baseURL) {
-    this.baseURL = baseURL;
+    this.baseURL = baseURL.replace(/\/$/, ''); // Remove trailing slash
   }
 
   async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${this.baseURL}${normalizedEndpoint}`;
     const token = localStorage.getItem('token');
 
     const config = {
