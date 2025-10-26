@@ -8,7 +8,12 @@ const router = express.Router();
 
 // Ensure upload directory exists (use /tmp for Vercel compatibility)
 const uploadDir = process.env.UPLOAD_PATH || path.join('/tmp', 'uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+try {
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+} catch (error) {
+    console.warn('Failed to create upload directory:', error.message);
+    // Continue without failing - Vercel will handle file uploads differently
+}
 
 // Multer storage
 const storage = multer.diskStorage({
