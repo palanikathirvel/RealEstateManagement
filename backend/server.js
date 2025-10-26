@@ -23,6 +23,21 @@ const PORT = process.env.PORT || 5000;
 // Trust proxy for Vercel deployment
 app.set('trust proxy', 1);
 
+// Parse JSON bodies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Security middleware
 app.use(helmet());
 app.use(cors({
@@ -74,16 +89,20 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Connect to MongoDB Atlas using the dedicated connection function
 connectDB();
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/properties', propertyRoutes);
-app.use('/api/otp', otpRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/survey-verification', surveyVerificationRoutes);
-app.use('/api/notifications', notificationRoutes);
-// File upload route
-app.use('/api/upload', uploadRoutes);
+// API Routes with and without /api prefix
+const mountRoute = (path, router) => {
+  app.use(`/api${path}`, router); // With /api prefix
+  app.use(path, router); // Without /api prefix
+};
+
+mountRoute('/auth', authRoutes);
+mountRoute('/properties', propertyRoutes);
+mountRoute('/otp', otpRoutes);
+mountRoute('/admin', adminRoutes);
+mountRoute('/users', userRoutes);
+mountRoute('/survey-verification', surveyVerificationRoutes);
+mountRoute('/notifications', notificationRoutes);
+mountRoute('/upload', uploadRoutes);
 
 // Serve uploaded files statically
 const uploadsPath = path.join(__dirname, process.env.UPLOAD_PATH || 'uploads');
