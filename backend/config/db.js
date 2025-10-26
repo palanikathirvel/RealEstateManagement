@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI;
-    
+    const mongoURI = 'mongodb+srv://manickmanick37_db_user:9F28HiGkFm4k6Rpq@cluster0.ee2n9b6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+
     if (!mongoURI) {
       console.error('MONGODB_URI is not defined in environment variables');
       console.error('Please set MONGODB_URI in your .env file');
@@ -17,7 +17,7 @@ const connectDB = async () => {
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
-    
+
     // Handle connection events
     mongoose.connection.on('connected', () => {
       console.log('Mongoose connected to MongoDB');

@@ -9,7 +9,7 @@ const User = require('./models/User');
 const createAdmin = async () => {
     try {
         // Connect to MongoDB using your existing connection string
-        const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://manickmanick37_db_user:9F28HiGkFm4k6Rpq@cluster0.ee2n9b6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+        const mongoUri = 'mongodb+srv://manickmanick37_db_user:9F28HiGkFm4k6Rpq@cluster0.ee2n9b6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
         if (!mongoUri || typeof mongoUri !== 'string') {
             throw new Error('MONGODB_URI is not set. Please set it in your .env file or provide a valid connection string.');
         }

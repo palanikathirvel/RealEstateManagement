@@ -41,7 +41,7 @@ app.get('/health', (req, res) => {
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:5174',

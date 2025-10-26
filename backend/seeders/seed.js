@@ -6,7 +6,7 @@ require('dotenv').config();
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect('mongodb+srv://manickmanick37_db_user:9F28HiGkFm4k6Rpq@cluster0.ee2n9b6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -380,12 +380,12 @@ const seedProperties = async (users) => {
 const seedDatabase = async () => {
   try {
     await connectDB();
-    
+
     console.log('🌱 Starting database seeding...');
-    
+
     const users = await seedUsers();
     await seedProperties(users);
-    
+
     console.log('✅ Database seeding completed successfully!');
     console.log('\n📝 Login Credentials:');
     console.log('Admin: admin@realestate.com / admin123');
@@ -393,7 +393,7 @@ const seedDatabase = async () => {
     console.log('Agent: priya.agent@gmail.com / agent123');
     console.log('User: arjun.user@gmail.com / user123');
     console.log('User: sneha.user@gmail.com / user123');
-    
+
     process.exit(0);
   } catch (error) {
     console.error('❌ Error seeding database:', error);

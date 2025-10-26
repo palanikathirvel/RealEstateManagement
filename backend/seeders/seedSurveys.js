@@ -259,7 +259,7 @@ const surveyData = [
   { surveyNumber: 'TN/VRG/2023/004', district: 'Virudhunagar', taluk: 'Rajapalayam', valid: true },
   { surveyNumber: 'TN/VRG/2023/005', district: 'Virudhunagar', taluk: 'Srivilliputhur', valid: true },
 
- 
+
   // (continues for the remaining 23 districts…)
 ];
 
@@ -267,7 +267,7 @@ const surveyData = [
 const seedSurveys = async () => {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect('mongodb+srv://manickmanick37_db_user:9F28HiGkFm4k6Rpq@cluster0.ee2n9b6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
